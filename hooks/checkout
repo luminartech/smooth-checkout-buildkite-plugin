@@ -63,13 +63,15 @@ setup_git_repo() {
   if [[ -d ".git" ]]; then
     echo "Git repository already exists."
     echo "So, doing a git clean and setting the remote URL"
-    sudo git clean -fdqx && \
-    git remote set-url origin "${REPO_URL}"
+    git submodule update --init --recursive 
+    # git clean -fdqx && \
+    # git remote set-url origin "${REPO_URL}"
     local EXIT_STATUS=$?
   else
     echo "Cloning ${REPO_URL}"
     # shellcheck disable=SC2086
     git clone ${BUILDKITE_GIT_CLONE_FLAGS} ${CLONE_FLAGS} --no-checkout -- "$REPO_URL" .
+    git submodule update --init --recursive 
     local EXIT_STATUS=$?
   fi
   if [[ $EXIT_STATUS -ne 0 ]]; then
@@ -80,6 +82,7 @@ setup_git_repo() {
     echo "Checking out branch: $BUILDKITE_BRANCH with $BUILDKITE_COMMIT"
     git fetch --force origin "$BUILDKITE_BRANCH" && \
     git checkout --quiet --force "$BUILDKITE_BRANCH" && \
+    git submodule update --init --recursive && \
     git reset --hard "$BUILDKITE_COMMIT"
     local EXIT_STATUS=$?
     if [[ $EXIT_STATUS -ne 0 ]]; then
@@ -88,7 +91,8 @@ setup_git_repo() {
   else
     echo "Checking out ref: $CHECKOUT_REF"
     git fetch --force origin "$CHECKOUT_REF" && \
-    git checkout --quiet --force "$CHECKOUT_REF"
+    git checkout --quiet --force "$CHECKOUT_REF" && \
+    git submodule update --init --recursive && \
     local EXIT_STATUS=$?
     if [[ $EXIT_STATUS -ne 0 ]]; then
       return $EXIT_STATUS
